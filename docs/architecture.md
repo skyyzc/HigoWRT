@@ -37,11 +37,14 @@ LuCI :8080 ---------+
 ## RG520N-CN 适配策略
 
 QModem v3.2.0 有 RM520N-CN 和 RG520N-EU/EB，但没有 RG520N-CN。不能盲目复制
-RM520N-CN 条目。现机采集后需要确认：
+RM520N-CN 条目。2026-08-30 现机采样已确认 USB ID 为 `2c7c:0801`，
+运行通道为 `/dev/cdc-wdm0` + `wwan0`，并由厂商 `qmi_wwan_q` 驱动。
+因此第一阶段只升级 QModem 用户态组件，复用官方固件的内核驱动。
 
-- `AT+CGMM` 的精确返回值及 QModem 归一化后的 model key；
-- USB VID/PID、总线模式和端口布局；
-- QMI/MBIM/ECM 等实际拨号模式；
+安装前仍需要确认：
+
+- `AT+CGMM` 与 QModem 归一化的 model key 是否稳定匹配 `rg520n-cn`；
+- 安装后仍使用 QMI，且 `/dev/cdc-wdm0`/`wwan0` 布局未变；
 - 中国版支持的 LTE/NSA/SA 频段；
 - Higo 后台是否持有 AT 端口。
 

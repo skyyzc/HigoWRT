@@ -72,10 +72,13 @@ make download -j"$jobs" 2>&1 | tee "$log_dir/download.log"
 make tools/install -j1 V=s 2>&1 | tee "$log_dir/tools-install.log"
 make toolchain/install -j1 V=s 2>&1 | tee "$log_dir/toolchain-install.log"
 
-# Runtime dependencies of qmodem include stock kmods. OpenWrt needs the target
-# kernel configuration before it can evaluate/build those dependency packages,
-# even though no kmod is allowed into our final userland artifact.
+# Runtime dependencies of qmodem include stock kmods. OpenWrt's prepare target
+# only unpacks and patches the kernel; it does not create linux-*/.config. Build
+# the pinned target kernel so package dependency traversal has the exact kernel
+# configuration and symbol metadata expected by this source revision. Kernel
+# packages remain excluded from the final allowlisted artifact.
 make target/linux/prepare -j1 V=s 2>&1 | tee "$log_dir/kernel-prepare.log"
+make target/linux/compile -j"$jobs" V=s 2>&1 | tee "$log_dir/kernel-compile.log"
 
 make -j"$jobs" V=s \
     package/qmodem/compile \
