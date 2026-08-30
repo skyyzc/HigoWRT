@@ -10,8 +10,9 @@ qmodem_tree="$build_root/QModem"
 qmodem_feed="$build_root/qmodem-userland-feed"
 downloads="$repo_root/downloads"
 jobs=${JOBS:-2}
+log_dir="$repo_root/artifacts/build-logs"
 
-mkdir -p "$build_root" "$downloads"
+mkdir -p "$build_root" "$downloads" "$log_dir"
 
 clone_at() {
     repository=$1
@@ -63,8 +64,15 @@ cd "$source_tree"
 cp "$repo_root/config/qmodem-userland.config" .config
 make defconfig
 
-make download -j"$jobs"
-make -j"$jobs" \
+make download -j"$jobs" 2>&1 | tee "$log_dir/download.log"
+
+# A partial OpenWrt staging_dir is not a valid cache unit. Build host tools and
+# the cross toolchain serially with verbose output so the first real error is
+# retained in CI artifacts.
+make tools/install -j1 V=s 2>&1 | tee "$log_dir/tools-install.log"
+make toolchain/install -j1 V=s 2>&1 | tee "$log_dir/toolchain-install.log"
+
+make -j"$jobs" V=s \
     package/qmodem/compile \
     package/qmodem-seal/compile \
     package/modem_scan/compile \
@@ -72,7 +80,8 @@ make -j"$jobs" \
     package/ubus_at_daemon/compile \
     package/sms-tool_q/compile \
     package/sms_forwarder_next/compile \
-    package/luci-app-qmodem-next/compile
+    package/luci-app-qmodem-next/compile \
+    2>&1 | tee "$log_dir/qmodem-compile.log"
 
 artifact_dir="$repo_root/artifacts/qmodem-3.2.0-immortalwrt-24.10"
 rm -rf "$artifact_dir"

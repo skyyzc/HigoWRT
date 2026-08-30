@@ -17,17 +17,24 @@ jobs:
             swig unzip zlib1g-dev file wget libelf-dev jq
       - uses: actions/cache@v4
         with:
-          path: |
-            downloads
-            build/qmodem-24.10/immortalwrt/staging_dir
-          key: qmodem-24.10-${{ hashFiles('config/upstreams.env', 'config/qmodem-userland.config') }}
+          path: downloads
+          key: qmodem-downloads-v2-${{ hashFiles('config/upstreams.env', 'config/qmodem-userland.config') }}
       - name: Build locked userland package set
         env:
           JOBS: "2"
         run: scripts/build-qmodem-userland.sh
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: qmodem-3.2.0-immortalwrt-24.10-UNTESTED
           path: artifacts/qmodem-3.2.0-immortalwrt-24.10
           if-no-files-found: error
+          retention-days: 14
+      - name: Upload complete build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qmodem-build-logs-${{ github.run_id }}
+          path: artifacts/build-logs
+          if-no-files-found: warn
           retention-days: 14
