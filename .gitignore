@@ -10,6 +10,8 @@ downloads/
 __pycache__/
 *.pyc
 inputs/
+private/
+vendor/blobs/
 build/
 downloads/
 artifacts/

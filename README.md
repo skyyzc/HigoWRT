@@ -8,16 +8,22 @@ HiGoWRT 固件。目标是在同一 OpenWrt 系统中保留：
 - QModem 新版及 RG520N-CN 适配；
 - 与固件 ABI 严格匹配的自有软件包源和升级清单。
 
-> 当前阶段：基线调查。尚未提供可刷写固件，也不应把仓库内容用于刷机。
+> 当前阶段：OpenWrt 25.12/Linux 6.12 迁移。尚未提供可刷写固件，也不应把仓库内容用于刷机。
 
-## 为什么先采集
+## 当前实施路线
 
-公开的 `Hiveton/higowrt` 源码包含 H5000M 板级及 Wi-Fi 驱动适配，但不能据此确认
-量产固件中 Higo 服务、双 Web 端口和 5G 后端的全部实现。QModem 与 Higo 后台如果
-同时直接访问 AT 串口，也存在竞争风险。因此先从现机采集不含密码的系统清单，再决定
-哪些组件迁移、替换或隔离。
+硬件和内核基线采用锁定的 `Hiveton/higowrt` 25.12 提交。旧量产固件仅作为 Higo
+管理面和运行行为的私有迁移输入，不再作为新软件包的编译基线。
 
-## 第一步：在设备上采集
+1. 先构建 initramfs 并从内存启动验证，不直接写入 eMMC。
+2. Higo `higorosd` 和前端从用户持有的官方固件私下提取，公开仓库不分发二进制。
+3. Higo 继续监听 80；LuCI 由 uhttpd 监听 8080。
+4. QModem 3.2.0 在 25.12 基线上重新编译，RG520N-CN 适配保持为小型覆盖层。
+5. 内核模块只允许来自同一次完整构建，禁止跨内核复制或强制安装。
+
+完整边界和阻塞项见 `docs/openwrt-25.12-migration.md`。
+
+## 设备采集
 
 把 `scripts/collect-h5000m.sh` 上传到路由器，在 SSH 中运行：
 
@@ -36,6 +42,10 @@ config/upstreams.env          固定并可审计的上游版本
 docs/architecture.md          目标架构和安全边界
 docs/device-inventory.md      采集项及判定标准
 docs/firmware-analysis-*.md   官方固件静态分析报告
+docs/openwrt-25.12-migration.md 新系统迁移路线与闭源边界
+package/higo-legacy/          私有 Higo payload 的公开打包骨架
+scripts/extract-higo-legacy.sh 从用户固件提取私有 Higo payload
+scripts/audit-vendor-firmware.sh 审计候选 6.12 固件及内核模块 ABI
 scripts/collect-h5000m.sh     现机只读采集脚本
 scripts/verify-upstreams.sh   上游版本与 RG520N-CN 缺口检查
 ```

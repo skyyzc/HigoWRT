@@ -14,9 +14,14 @@ jobs:
       - name: Check shell syntax
         run: |
           sh -n scripts/collect-h5000m.sh
+          sh -n scripts/audit-vendor-firmware.sh
+          sh -n scripts/extract-higo-legacy.sh
+          sh -n scripts/prepare-openwrt-25.12.sh
+          sh -n scripts/stage-higo-legacy.sh
           sh -n scripts/verify-upstreams.sh
           sh -n scripts/test-qmodem-profile.sh
           bash -n scripts/build-qmodem-userland.sh
+          sh -n package/higo-legacy/files/etc/init.d/higoros
       - name: Fetch locked QModem
         run: git clone --branch v3.2.0 --depth 1 https://github.com/FUjr/QModem.git /tmp/QModem
       - name: Verify lock and RG520N-CN overlay

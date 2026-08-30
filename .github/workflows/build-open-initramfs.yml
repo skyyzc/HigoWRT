@@ -1,0 +1,57 @@
+name: Build OpenWrt 25.12 initramfs probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OpenWrt build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib \
+            g++-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync \
+            swig unzip zlib1g-dev file wget libelf-dev jq qemu-utils
+      - uses: actions/cache@v4
+        with:
+          path: downloads
+          key: openwrt-25.12-downloads-v1-${{ hashFiles('config/upstreams.env', 'config/h5000m-open-initramfs.config') }}
+      - name: Prepare locked source
+        run: scripts/prepare-openwrt-25.12.sh
+      - name: Download sources
+        working-directory: build/openwrt-25.12/higowrt
+        env:
+          DL_DIR: ${{ github.workspace }}/downloads
+        run: make download -j2
+      - name: Build public initramfs probe
+        working-directory: build/openwrt-25.12/higowrt
+        env:
+          DL_DIR: ${{ github.workspace }}/downloads
+        run: make -j2 V=s BUILD_LOG=1
+      - name: Collect public probe artifacts
+        run: |
+          mkdir -p artifacts/open-initramfs
+          find build/openwrt-25.12/higowrt/bin/targets/mediatek/filogic \
+            -maxdepth 1 -type f \
+            \( -name '*h5000m*initramfs*' -o -name '*.manifest' -o -name '*.buildinfo' -o -name 'sha256sums' \) \
+            -exec cp -v {} artifacts/open-initramfs/ \;
+          test -n "$(find artifacts/open-initramfs -type f -name '*h5000m*initramfs*' -print -quit)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h5000m-open-initramfs-UNTESTED
+          path: artifacts/open-initramfs
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h5000m-open-initramfs-logs-${{ github.run_id }}
+          path: |
+            build/openwrt-25.12/higowrt/logs
+            build/openwrt-25.12/higowrt/.config
+          if-no-files-found: warn
+          retention-days: 14
