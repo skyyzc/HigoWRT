@@ -1,0 +1,15 @@
+artifacts/
+build/
+downloads/
+*.tar.gz
+*.bin
+*.itb
+*.ipk
+*.apk
+.DS_Store
+__pycache__/
+*.pyc
+inputs/
+build/
+downloads/
+artifacts/
