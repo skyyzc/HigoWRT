@@ -7,6 +7,7 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 build_root=${BUILD_ROOT:-"$repo_root/build/qmodem-24.10"}
 source_tree="$build_root/immortalwrt"
 qmodem_tree="$build_root/QModem"
+qmodem_feed="$build_root/qmodem-userland-feed"
 downloads="$repo_root/downloads"
 jobs=${JOBS:-2}
 
@@ -30,12 +31,30 @@ python3 "$repo_root/scripts/apply-qmodem-profile.py" \
     "$qmodem_tree/application/qmodem/files/usr/share/qmodem/modem_support.json" \
     --profile "$repo_root/overlays/qmodem/rg520n-cn.json"
 
+# Do not expose QModem's driver and legacy-LuCI package definitions to Kconfig.
+# Some of their global choice defaults select replacement kernel drivers even
+# when luci-app-qmodem itself is disabled. The curated feed is the safety
+# boundary for this package-only build.
+rm -rf "$qmodem_feed"
+mkdir -p "$qmodem_feed"
+for relative_path in \
+    application/qmodem \
+    application/qmodem-seal \
+    application/modem_scan \
+    application/tom_modem \
+    application/ubus_at_daemon \
+    application/sms-tool_q \
+    application/sms_forwarder_next \
+    luci/luci-app-qmodem-next; do
+    ln -s "$qmodem_tree/$relative_path" "$qmodem_feed/${relative_path##*/}"
+done
+
 cat >"$source_tree/feeds.conf" <<EOF
 src-git packages $PACKAGES_REPOSITORY^$PACKAGES_REF
 src-git luci $LUCI_REPOSITORY^$LUCI_REF
 src-git routing $ROUTING_REPOSITORY^$ROUTING_REF
 src-git telephony $TELEPHONY_REPOSITORY^$TELEPHONY_REF
-src-link qmodem $qmodem_tree
+src-link qmodem $qmodem_feed
 EOF
 
 cd "$source_tree"
@@ -44,20 +63,15 @@ cd "$source_tree"
 cp "$repo_root/config/qmodem-userland.config" .config
 make defconfig
 
-if grep -Eq '^CONFIG_PACKAGE_kmod-(qmi_wwan_[qfs]|pcie_mhi)' .config; then
-    echo "refusing to build replacement QModem kernel drivers in phase 1" >&2
-    exit 1
-fi
-
 make download -j"$jobs"
 make -j"$jobs" \
     package/qmodem/compile \
     package/qmodem-seal/compile \
     package/modem_scan/compile \
     package/tom_modem/compile \
-    package/ubus-at-daemon/compile \
+    package/ubus_at_daemon/compile \
     package/sms-tool_q/compile \
-    package/sms-forwarder-next/compile \
+    package/sms_forwarder_next/compile \
     package/luci-app-qmodem-next/compile
 
 artifact_dir="$repo_root/artifacts/qmodem-3.2.0-immortalwrt-24.10"
