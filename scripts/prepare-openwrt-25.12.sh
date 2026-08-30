@@ -28,6 +28,12 @@ git -C "$source_tree" fetch --depth=1 origin "$HIGOWRT_REF"
 git -C "$source_tree" checkout --detach "$HIGOWRT_REF"
 
 cd "$source_tree"
+
+# The vendor HNAT module currently fails Linux 6.12's mandatory prototype
+# checks. Keep the first-boot RAM probe independent from that optional data
+# path; a dedicated compatibility lane will restore it after hardware bring-up.
+patch -p1 --forward < "$repo_root/patches/hiveton/0001-filogic-disable-vendor-hnat-for-initramfs-probe.patch"
+
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 

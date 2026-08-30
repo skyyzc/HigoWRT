@@ -1,0 +1,8 @@
+--- a/target/linux/mediatek/filogic/config-6.12
++++ b/target/linux/mediatek/filogic/config-6.12
+@@ -534,4 +534,4 @@
+ CONFIG_ZSTD_COMPRESS=y
+ CONFIG_ZSTD_DECOMPRESS=y
+ # CONFIG_NF_FLOW_TABLE_NETLINK is not set
+-CONFIG_NET_MEDIATEK_HNAT=m
++# CONFIG_NET_MEDIATEK_HNAT is not set
