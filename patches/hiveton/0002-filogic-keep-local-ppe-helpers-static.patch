@@ -1,0 +1,21 @@
+--- a/target/linux/mediatek/patches-6.12/999-3010-net-ethernet-mtk_ppe-dispatch-short-packets-a-high-p.patch
++++ b/target/linux/mediatek/patches-6.12/999-3010-net-ethernet-mtk_ppe-dispatch-short-packets-a-high-p.patch
+@@ -26,6 +26,6 @@
+ -static int
+ -mtk_flow_entry_match_len(struct mtk_eth *eth, struct mtk_foe_entry *entry)
+-+unsigned int mtk_foe_entry_get_queue(struct mtk_eth *eth, struct mtk_foe_entry *entry)
+++static unsigned int mtk_foe_entry_get_queue(struct mtk_eth *eth, struct mtk_foe_entry *entry)
+ +{
+ +	u32 *ib2 = mtk_foe_entry_ib2(eth, entry);
+ +
+--- a/target/linux/mediatek/patches-6.12/999-3013-net-ethernet-mtk_ppe-add-PPE-cache-preserved-line-lo.patch
++++ b/target/linux/mediatek/patches-6.12/999-3013-net-ethernet-mtk_ppe-add-PPE-cache-preserved-line-lo.patch
+@@ -108,7 +108,7 @@
+ +	}
+ +}
+ +
+-+void mtk_ppe_cache_clear(struct mtk_ppe *ppe)
+++static void mtk_ppe_cache_clear(struct mtk_ppe *ppe)
+ +{
+ +	static const u32 mask = MTK_PPE_ALERT_TCP_FIN_RST_SYN |
+ +				MTK_PPE_MD_TOAP_BYP_CRSN0 |
