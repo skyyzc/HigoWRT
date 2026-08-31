@@ -56,6 +56,33 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
 6. **testing sysupgrade**：所有 initramfs 检查通过后才生成，且首次迁移不保留旧
    overlay，避免 opkg/apk 和旧 UCI 状态污染。
 
+## 构建门禁
+
+公开探测镜像严格按以下顺序构建，任何阶段失败都不得继续生成或发布镜像：
+
+1. 准备锁定源码并应用本仓库中可审计的兼容补丁；
+2. 下载并校验源码归档；
+3. 串行完成 host tools 和 AArch64 交叉工具链；
+4. 单独执行 `target/linux/compile`，集中暴露 MTK 6.12 内核兼容问题；
+5. 内核预检通过后才执行完整 Initramfs 构建；
+6. 只收集 H5000M recovery Initramfs、manifest、buildinfo 和校验和。
+
+下载缓存与编译缓存分开管理。失败任务也保存日志和 ccache，但缓存不能替代锁定源码、
+补丁 dry-run 或完整编译验证。
+
+### 已确认的 MTK 6.12 基线问题
+
+- `NET_MEDIATEK_HNAT` 在 filogic 内核配置中被全局启用，但厂商 HNAT 代码未通过
+  Linux 6.12 原型检查；公开 RAM 探测通道暂时关闭 HNAT，最终硬件加速通道必须另行
+  恢复和验证。
+- 厂商 PPE 补丁错误暴露内部 helper，并包含无调用者的 queue helper；探测通道保持
+  cache helper 为文件内符号并删除死代码。
+- `wifi_utility` 导出的 MTD helper 缺少公共原型；兼容补丁补充专用头文件，不改变
+  `EXPORT_SYMBOL` 或读写行为。
+
+只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
+或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。
+
 ## 发布规则
 
 - 插件更新可自动构建进入 testing，但必须人工晋升 stable。
