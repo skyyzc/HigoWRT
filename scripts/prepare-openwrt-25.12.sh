@@ -35,6 +35,7 @@ cd "$source_tree"
 patch -p1 --forward < "$repo_root/patches/hiveton/0001-filogic-disable-vendor-hnat-for-initramfs-probe.patch"
 patch -p1 --forward < "$repo_root/patches/hiveton/0002-filogic-keep-local-ppe-helpers-static.patch"
 patch -p1 --forward < "$repo_root/patches/hiveton/0003-wifi-utility-declare-exported-mtd-helpers.patch"
+patch -p1 --forward < "$repo_root/patches/hiveton/0004-wifi-utility-use-constant-pinctrl-state.patch"
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a

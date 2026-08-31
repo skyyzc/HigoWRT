@@ -79,6 +79,8 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
   cache helper 为文件内符号并删除死代码。
 - `wifi_utility` 导出的 MTD helper 缺少公共原型；兼容补丁补充专用头文件，不改变
   `EXPORT_SYMBOL` 或读写行为。
+- `wifi_utility` 的 RBUS pinctrl 状态名使用源字符串长度调用 `strncpy`；兼容补丁将
+  固定状态名改为只读常量，移除不必要且会触发边界检查的复制。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。
