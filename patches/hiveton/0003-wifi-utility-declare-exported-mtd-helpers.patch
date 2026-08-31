@@ -1,0 +1,23 @@
+--- /dev/null
++++ b/target/linux/mediatek/files-6.12/drivers/net/wireless/wifi_utility/mt_wifi_mtd.h
+@@ -0,0 +1,10 @@
++#ifndef _MT_WIFI_MTD_H_
++#define _MT_WIFI_MTD_H_
++
++#include <linux/types.h>
++
++int mt_mtd_write_nm_wifi(char *name, loff_t to, size_t len, const u_char *buf);
++int mt_mtd_read_nm_wifi(char *name, loff_t from, size_t len, u_char *buf);
++
++#endif /* _MT_WIFI_MTD_H_ */
++
+--- a/target/linux/mediatek/files-6.12/drivers/net/wireless/wifi_utility/mt_wifi_mtd.c
++++ b/target/linux/mediatek/files-6.12/drivers/net/wireless/wifi_utility/mt_wifi_mtd.c
+@@ -11,6 +11,7 @@
+ #include <linux/mtd/map.h>
+ #include <linux/mtd/concat.h>
+ #include <linux/mtd/partitions.h>
++#include "mt_wifi_mtd.h"
+ #if defined (CONFIG_MIPS)
+ #include <asm/addrspace.h>
+ #endif

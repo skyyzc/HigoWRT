@@ -19,6 +19,12 @@ jobs:
         with:
           path: downloads
           key: openwrt-25.12-downloads-v1-${{ hashFiles('config/upstreams.env', 'config/h5000m-open-initramfs.config') }}
+      - uses: actions/cache/restore@v4
+        with:
+          path: .ccache
+          key: openwrt-25.12-ccache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            openwrt-25.12-ccache-${{ runner.os }}-
       - name: Prepare locked source
         run: scripts/prepare-openwrt-25.12.sh
       - name: Download sources
@@ -26,9 +32,16 @@ jobs:
         env:
           DL_DIR: ${{ github.workspace }}/downloads
         run: make download -j2
+      - name: Preflight target kernel
+        working-directory: build/openwrt-25.12/higowrt
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+          DL_DIR: ${{ github.workspace }}/downloads
+        run: make -k -j2 V=s BUILD_LOG=1 target/linux/compile
       - name: Build public initramfs probe
         working-directory: build/openwrt-25.12/higowrt
         env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
           DL_DIR: ${{ github.workspace }}/downloads
         run: make -j2 V=s BUILD_LOG=1
       - name: Collect public probe artifacts
@@ -55,3 +68,9 @@ jobs:
             build/openwrt-25.12/higowrt/.config
           if-no-files-found: warn
           retention-days: 14
+      - name: Save compiler cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .ccache
+          key: openwrt-25.12-ccache-${{ runner.os }}-${{ github.sha }}
