@@ -1,0 +1,53 @@
+diff -urN a/package/network/config/wifi-scripts/Makefile b/package/network/config/wifi-scripts/Makefile
+--- a/package/network/config/wifi-scripts/Makefile
++++ b/package/network/config/wifi-scripts/Makefile
+@@ -48,8 +48,6 @@
+ ifeq ($(CONFIG_WIFI_SCRIPTS_UCODE),y)
+ 	$(CP) ./files-ucode/* $(1)/
+ endif
+-	# HiGoWRT: /sbin/wifi 由 wifi-profile 的 wifi_jedi 提供(懂 mtwifi)
+-	rm -f $(1)/sbin/wifi
+ endef
+ 
+ $(eval $(call BuildPackage,wifi-scripts))
+diff -urN a/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts b/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
+--- a/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
++++ b/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
+@@ -17,6 +17,7 @@
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/interrupt-controller/irq.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/phy/phy.h>
+ 
+ / {
+ 	model = "Hiveton H5000M";
+@@ -209,7 +210,7 @@
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pcie1_pins>;
+ 	num-lanes = <1>;
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &pwm {
+@@ -227,6 +228,8 @@
+ 
+ &ssusb {
+ 	status = "okay";
++	mediatek,u3p-dis-msk = <0x1>;
++	phys = <&tphyu2port0 PHY_TYPE_USB2>;
+ };
+ 
+ &uart0 {
+diff -urN a/target/linux/mediatek/filogic/base-files/etc/board.d/02_network b/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
+--- a/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
++++ b/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
+@@ -10,7 +10,7 @@
+ 	case $board in
+ 	hiveton,h5000m|\
+ 	hiveton,h5000m-nand)
+-		ucidef_set_interfaces_lan_wan "eth1 hnat" eth0
++		ucidef_set_interface_lan "eth0 eth1"
+ 		;;
+ 	abt,asr3000|\
+ 	buffalo,wsr-6000ax8|\

@@ -36,6 +36,7 @@ patch -p1 --forward < "$repo_root/patches/hiveton/0001-filogic-disable-vendor-hn
 patch -p1 --forward < "$repo_root/patches/hiveton/0002-filogic-keep-local-ppe-helpers-static.patch"
 patch -p1 --forward < "$repo_root/patches/hiveton/0003-wifi-utility-declare-exported-mtd-helpers.patch"
 patch -p1 --forward < "$repo_root/patches/hiveton/0004-wifi-utility-use-constant-pinctrl-state.patch"
+patch -p1 --forward < "$repo_root/patches/hiveton/0005-h5000m-public-probe-hardware-fixes.patch"
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a

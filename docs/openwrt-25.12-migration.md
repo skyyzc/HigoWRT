@@ -81,6 +81,12 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
   `EXPORT_SYMBOL` 或读写行为。
 - `wifi_utility` 的 RBUS pinctrl 状态名使用源字符串长度调用 `strncpy`；兼容补丁将
   固定状态名改为只读常量，移除不必要且会触发边界检查的复制。
+- 首次 RAM 启动确认 MT7992 请求 `_23` 固件变体；公开探测通道改用
+  `kmod-mt7992-23-firmware`，并保留开源 mt76 的 `/sbin/wifi`。
+- 首次 RAM 启动确认镜像缺少 xHCI、RG520N-CN 未枚举；探测通道加入 `kmod-usb3`，
+  按 MT7987 官方 USB2 overlay 禁用 USB3 PHY，并关闭无设备且超时的 PCIe1。
+- 首次 RAM 启动确认网口角色与 DTS 注释相反；救援镜像将 `eth0`、`eth1` 都放入
+  LAN，不配置 WAN，避免无 TTL 环境因单口映射失联。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。
