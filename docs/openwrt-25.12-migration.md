@@ -93,6 +93,10 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
 - 第三次 RAM 启动确认 MT7992 已注册完整的 2.4/5 GHz `phy0`，但 factory EEPROM
   仍未被 mt76 接受；同时发现 MT7987 的 USB3 PHY 在 SoC DTSI 中默认禁用，导致
   xHCI 以 `-110` 失败。后续探测通道显式启用 USB3 PHY 并绑定 3.3 V 电源。
+- 第四次 RAM 启动确认 USB3 PHY 和 xHCI 稳定工作，RG520N-CN 以 `2c7c:0801`
+  在 5 Gbit/s SuperSpeed 枚举；`option` 生成 `/dev/ttyUSB0..3`，`qmi_wwan`
+  生成 `/dev/cdc-wdm0` 和 `wwan0`。公开 Linux 6.12 驱动已覆盖 5G 内核链路，后续
+  不需要移植官方固件的 USB/QMI 闭源内核模块。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。
