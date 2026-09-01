@@ -11,6 +11,7 @@ fi
 
 build_root=${BUILD_ROOT:-"$repo_root/build/openwrt-25.12"}
 source_tree="$build_root/higowrt"
+qmodem_tree="$build_root/QModem"
 private_higo=${PRIVATE_HIGO:-}
 
 mkdir -p "$build_root"
@@ -27,6 +28,12 @@ fi
 git -C "$source_tree" fetch --depth=1 origin "$HIGOWRT_REF"
 git -C "$source_tree" checkout --detach "$HIGOWRT_REF"
 
+if [ ! -d "$qmodem_tree/.git" ]; then
+	git clone --filter=blob:none --no-checkout "$QMODEM_REPOSITORY" "$qmodem_tree"
+fi
+git -C "$qmodem_tree" fetch --depth=1 origin "$QMODEM_COMMIT"
+git -C "$qmodem_tree" checkout --detach "$QMODEM_COMMIT"
+
 cd "$source_tree"
 
 # The vendor HNAT module currently fails Linux 6.12's mandatory prototype
@@ -39,6 +46,8 @@ patch -p1 --forward < "$repo_root/patches/hiveton/0004-wifi-utility-use-constant
 patch -p1 --forward < "$repo_root/patches/hiveton/0005-h5000m-public-probe-hardware-fixes.patch"
 patch -p1 --forward < "$repo_root/patches/hiveton/0006-h5000m-wire-wifi-eeprom-and-restore-usb3.patch"
 patch -p1 --forward < "$repo_root/patches/hiveton/0007-h5000m-enable-usb3-phy.patch"
+
+"$repo_root/scripts/stage-qmodem-25.12.sh" "$qmodem_tree" "$source_tree"
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a

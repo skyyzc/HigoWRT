@@ -97,6 +97,9 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
   在 5 Gbit/s SuperSpeed 枚举；`option` 生成 `/dev/ttyUSB0..3`，`qmi_wwan`
   生成 `/dev/cdc-wdm0` 和 `wwan0`。公开 Linux 6.12 驱动已覆盖 5G 内核链路，后续
   不需要移植官方固件的 USB/QMI 闭源内核模块。
+- QModem 集成通道从锁定的 3.2.0 commit 只复制用户态包和 `quectel-CM-5G-M`，不暴露
+  QModem 的替换内核驱动目录；RG520N-CN profile 在暂存树中增量合并。首次 RAM
+  集成测试默认关闭自动拨号，只验证发现、AT、ubus 和 LuCI，避免未经确认产生流量。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。
