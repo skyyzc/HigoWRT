@@ -87,6 +87,9 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
   按 MT7987 官方 USB2 overlay 禁用 USB3 PHY，并关闭无设备且超时的 PCIe1。
 - 首次 RAM 启动确认网口角色与 DTS 注释相反；救援镜像将 `eth0`、`eth1` 都放入
   LAN，不配置 WAN，避免无 TTL 环境因单口映射失联。
+- 第二次 RAM 启动确认 xHCI 和 MT7992 `_23` 固件均正常，但 MT7992 缺少板级 EEPROM
+  绑定，USB 只有根集线器。后续探测通道把已有的 factory EEPROM 单元绑定到 PCIe
+  Wi-Fi，并撤销不适合 H5000M 的 USB2-only RFB 假设，恢复 USB2/USB3 PHY。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。

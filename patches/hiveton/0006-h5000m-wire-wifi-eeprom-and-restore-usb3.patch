@@ -1,0 +1,39 @@
+diff -urN a/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts b/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
+--- a/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
++++ b/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
+@@ -17,7 +17,6 @@
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/interrupt-controller/irq.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+-#include <dt-bindings/phy/phy.h>
+ 
+ / {
+ 	model = "Hiveton H5000M";
+@@ -204,6 +203,18 @@
+ 	pinctrl-0 = <&pcie0_pins>;
+ 	num-lanes = <1>;
+ 	status = "okay";
++
++	pcie@0,0 {
++		reg = <0x0000 0 0 0 0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		mt7996@0,0 {
++			reg = <0x0000 0 0 0 0>;
++			nvmem-cells = <&eeprom_factory_0>;
++			nvmem-cell-names = "eeprom";
++		};
++	};
+ };
+ 
+ &pcie1 {
+@@ -228,8 +239,6 @@
+ 
+ &ssusb {
+ 	status = "okay";
+-	mediatek,u3p-dis-msk = <0x1>;
+-	phys = <&tphyu2port0 PHY_TYPE_USB2>;
+ };
+ 
+ &uart0 {
