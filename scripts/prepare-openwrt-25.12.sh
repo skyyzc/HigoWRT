@@ -38,6 +38,7 @@ patch -p1 --forward < "$repo_root/patches/hiveton/0003-wifi-utility-declare-expo
 patch -p1 --forward < "$repo_root/patches/hiveton/0004-wifi-utility-use-constant-pinctrl-state.patch"
 patch -p1 --forward < "$repo_root/patches/hiveton/0005-h5000m-public-probe-hardware-fixes.patch"
 patch -p1 --forward < "$repo_root/patches/hiveton/0006-h5000m-wire-wifi-eeprom-and-restore-usb3.patch"
+patch -p1 --forward < "$repo_root/patches/hiveton/0007-h5000m-enable-usb3-phy.patch"
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a

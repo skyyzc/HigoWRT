@@ -1,0 +1,15 @@
+diff -urN a/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts b/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
+--- a/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
++++ b/target/linux/mediatek/dts/mt7987a-hiveton-h5000m.dts
+@@ -239,6 +239,11 @@
+ 
+ &ssusb {
+ 	status = "okay";
++	vusb33-supply = <&reg_3p3v>;
++};
++
++&tphyu3port0 {
++	status = "okay";
+ };
+ 
+ &uart0 {

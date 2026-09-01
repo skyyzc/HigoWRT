@@ -90,6 +90,9 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
 - 第二次 RAM 启动确认 xHCI 和 MT7992 `_23` 固件均正常，但 MT7992 缺少板级 EEPROM
   绑定，USB 只有根集线器。后续探测通道把已有的 factory EEPROM 单元绑定到 PCIe
   Wi-Fi，并撤销不适合 H5000M 的 USB2-only RFB 假设，恢复 USB2/USB3 PHY。
+- 第三次 RAM 启动确认 MT7992 已注册完整的 2.4/5 GHz `phy0`，但 factory EEPROM
+  仍未被 mt76 接受；同时发现 MT7987 的 USB3 PHY 在 SoC DTSI 中默认禁用，导致
+  xHCI 以 `-110` 失败。后续探测通道显式启用 USB3 PHY 并绑定 3.3 V 电源。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。
