@@ -1,0 +1,20 @@
+diff --git a/application/qmodem/files/usr/share/qmodem/modem_dial.sh b/application/qmodem/files/usr/share/qmodem/modem_dial.sh
+index c1021d4..9b9a5bb 100755
+--- a/application/qmodem/files/usr/share/qmodem/modem_dial.sh
++++ b/application/qmodem/files/usr/share/qmodem/modem_dial.sh
+@@ -738,6 +738,16 @@ set_if()
+             ;;
+     esac
++    # quectel-CM-M is invoked with -d below for QMI devices. In that mode it
++    # obtains the address, DNS and routes through QMI and configures the netdev
++    # itself. Running netifd's DHCP client at the same time races raw-IP setup,
++    # repeatedly toggles wwan0 and can leave an address with no working data
++    # path. Keep the logical firewall interfaces, but do not run a second
++    # address client.
++    if [ "$manufacturer" = "quectel" ] && [ "$driver" = "qmi" ] && [ -e "/usr/bin/quectel-CM-M" ]; then
++        proto="none"
++        protov6="none"
++    fi
+     if [ "$bridge_enabled" = "1" ]; then
+         proto="none"
+         protov6="none"

@@ -61,6 +61,18 @@ while [ "$elapsed" -lt 90 ]; do
 	elapsed=$((elapsed + 5))
 done
 
+# The address may appear just before raw-IP mode, routes and carrier settle.
+sleep 5
+gateway=$(ip route show dev "$device" 2>/dev/null | awk '$1 == "default" { print $3; exit }')
+public_reachable=0
+gateway_reachable=0
+if [ -n "$gateway" ] && ping -c 1 -W 3 -I "$device" "$gateway" >/dev/null 2>&1; then
+	gateway_reachable=1
+fi
+if ping -c 3 -W 3 -I "$device" 1.1.1.1 >/dev/null 2>&1; then
+	public_reachable=1
+fi
+
 {
 	echo
 	echo "## qmodem"
@@ -71,6 +83,12 @@ done
 	echo
 	echo "## address"
 	ip addr show dev "$device" 2>&1 || true
+	echo "raw_ip=$(cat /sys/class/net/$device/qmi/raw_ip 2>/dev/null || echo unavailable)"
+	echo "gateway=$gateway"
+	echo "gateway_reachable=$gateway_reachable"
+	echo "public_reachable=$public_reachable"
+	cat "/sys/class/net/$device/statistics/rx_packets" 2>/dev/null | sed 's/^/rx_packets=/' || true
+	cat "/sys/class/net/$device/statistics/tx_packets" 2>/dev/null | sed 's/^/tx_packets=/' || true
 	echo
 	echo "## routes"
 	ip route show 2>&1 || true
@@ -79,6 +97,7 @@ done
 	ubus call "network.interface.USB" status 2>&1 || true
 	echo
 	echo "## forced-interface ping"
+	[ -z "$gateway" ] || ping -c 3 -W 3 -I "$device" "$gateway" 2>&1 || true
 	ping -c 3 -W 3 -I "$device" 1.1.1.1 2>&1 || true
 	echo
 	echo "## dial log"
@@ -88,10 +107,10 @@ done
 	logread | grep -Ei 'qmodem|quectel|wwan|qmi|udhcpc' | tail -n 200
 } >>"$report"
 
-if ip -f inet addr show dev "$device" 2>/dev/null | grep -q 'inet '; then
-	echo "QMI session obtained an IPv4 address. Report: $report"
+if [ "$public_reachable" -eq 1 ]; then
+	echo "QMI data path is reachable. Report: $report"
 	exit 0
 fi
 
-echo "QMI session did not obtain an IPv4 address. Report: $report" >&2
+echo "QMI data path is not reachable. Report: $report" >&2
 exit 1

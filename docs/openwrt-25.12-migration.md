@@ -106,6 +106,11 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
 - QMI 验证使用 `h5000m-qmi-smoke-test` 临时启动 `2_1`，强制从 `wwan0` 发出三个
   ICMP 包，最长运行两分钟并保存报告；正常结束、错误、信号或独立 watchdog 超时都会
   调用 QModem hang。该脚本不修改全局 `enable_dial=0`，不能替代正式联网配置。
+- 第六次 RAM 启动确认 QMI 会话能取得 IPv4 `10.96.22.37/30`、IPv6 和默认路由，
+  QModem 页面显示已连接，但公网 ICMP 不通。报告同时显示 `quectel-CM-M -d` 已直接
+  配置地址，而 netifd 的 `USB` DHCP 客户端仍在 pending 并反复切换 `wwan0` 链路。
+  本地兼容补丁因此让 Quectel QMI + `quectel-CM-M` 使用 `proto none`，避免两个地址
+  管理器竞争；下一轮测试以公网实际可达而非仅获得地址作为成功条件。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。
