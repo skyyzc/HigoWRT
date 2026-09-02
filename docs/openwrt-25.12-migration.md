@@ -115,6 +115,10 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
   `raw_ip=N`、TX 有计数而 RX 始终为零，连蜂窝网关也不可达。后续补丁在启动
   `quectel-CM-M` 之前将上游 `qmi_wwan` 切到 raw-IP，并在测试命令返回前记录完成
   hang 后的 procd、进程和地址状态，避免把 PDP 残留误认为测试已安全结束。
+- 第八次 RAM 启动确认 raw-IP 修复完成数据面：`raw_ip=Y`，公网 ICMP 3/3，RX/TX
+  均有计数；测试后的 procd 实例、拨号进程和 `wwan0` 地址均已清理。RG520N-CN 仍在
+  `AT+CGACT/CGPADDR` 中保留上下文，导致 LuCI 显示 Yes；本地状态补丁要求 QMI 的
+  procd 拨号实例和实际 netdev 地址同时存在，避免把该模块缓存误报为在线会话。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。

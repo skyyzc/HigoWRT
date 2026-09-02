@@ -1,0 +1,28 @@
+diff --git a/application/qmodem/files/usr/share/qmodem/generic.sh b/application/qmodem/files/usr/share/qmodem/generic.sh
+index 34ff7b9..344d750 100755
+--- a/application/qmodem/files/usr/share/qmodem/generic.sh
++++ b/application/qmodem/files/usr/share/qmodem/generic.sh
+@@ -603,6 +603,23 @@ get_connect_status()
+             fi
+         done
+     fi
++
++    # Some Quectel firmware keeps CGACT/CGPADDR populated after the QMI WDS
++    # client has stopped. For a QMI device, report the live router data path
++    # rather than that stale modem context: the managed dial instance must be
++    # running and its netdev must still own an address.
++    if [ "$driver" = "qmi" ] && [ -n "$config_section" ]; then
++        local qmi_network
++        local qmi_status
++        qmi_network=$(uci -q get "qmodem.${config_section}.network")
++        qmi_status=$(/etc/init.d/qmodem_network modem_status "$config_section" 2>/dev/null)
++        if echo "$qmi_status" | grep -q "Not Running"; then
++            connect_status="No"
++        elif [ -z "$qmi_network" ] || ! ip addr show dev "$qmi_network" 2>/dev/null | grep -qE 'inet6? '; then
++            connect_status="No"
++        fi
++    fi
++
+     add_plain_info_entry "connect_status" "$connect_status" "Connect Status"
+ }
+ 
