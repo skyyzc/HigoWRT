@@ -37,6 +37,10 @@ for package in \
 done
 cp -R "$qmodem_source/luci/luci-app-qmodem-next" "$target/luci/luci-app-qmodem-next"
 
+for qmodem_patch in "$repo_root"/patches/qmodem/*.patch; do
+	patch -d "$target" -p1 <"$qmodem_patch"
+done
+
 python3 "$repo_root/scripts/apply-qmodem-profile.py" \
 	"$target/application/qmodem/files/usr/share/qmodem/modem_support.json" \
 	--profile "$repo_root/overlays/qmodem/rg520n-cn.json"

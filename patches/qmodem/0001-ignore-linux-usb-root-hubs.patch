@@ -1,0 +1,13 @@
+--- a/application/qmodem/files/etc/hotplug.d/usb/20-modem-usb
++++ b/application/qmodem/files/etc/hotplug.d/usb/20-modem-usb
+@@ -3,6 +3,11 @@
+ manual=$(uci -q get qmodem.main.block_auto_probe)
+ [ "${manual}" -eq 1 ] && exit
++
++# Linux root hubs also emit USB hotplug events. They can never be modems and
++# otherwise become bogus usb1/usb2 scan jobs with five pointless retries.
++case "${PRODUCT:-}" in 1d6b/*) exit 0 ;; esac
++
+ logger -t modem_hotplug "usb_event slot: ${DEVPATH} action: ${ACTION}"
+ hotplug_add_delay=$(uci -q get qmodem.main.hotplug_add_delay || echo 8)
+ [ -z "${DEVNUM}" ] && exit
