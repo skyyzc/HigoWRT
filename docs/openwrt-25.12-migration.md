@@ -111,6 +111,10 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
   配置地址，而 netifd 的 `USB` DHCP 客户端仍在 pending 并反复切换 `wwan0` 链路。
   本地兼容补丁因此让 Quectel QMI + `quectel-CM-M` 使用 `proto none`，避免两个地址
   管理器竞争；下一轮测试以公网实际可达而非仅获得地址作为成功条件。
+- 第七次 RAM 启动确认 netifd 竞争已经消失（`proto none`、`pending=false`），但
+  `raw_ip=N`、TX 有计数而 RX 始终为零，连蜂窝网关也不可达。后续补丁在启动
+  `quectel-CM-M` 之前将上游 `qmi_wwan` 切到 raw-IP，并在测试命令返回前记录完成
+  hang 后的 procd、进程和地址状态，避免把 PDP 残留误认为测试已安全结束。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。

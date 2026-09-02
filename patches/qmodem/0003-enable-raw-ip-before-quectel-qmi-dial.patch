@@ -1,0 +1,22 @@
+diff --git a/application/qmodem/files/usr/share/qmodem/modem_dial.sh b/application/qmodem/files/usr/share/qmodem/modem_dial.sh
+index 9b9a5bb..ae4a0e0 100755
+--- a/application/qmodem/files/usr/share/qmodem/modem_dial.sh
++++ b/application/qmodem/files/usr/share/qmodem/modem_dial.sh
+@@ -1144,5 +1144,17 @@ qmi_dial()
+         cmd_line="${cmd_line} -i ${qmi_if}"
+     fi
++    # Linux's upstream qmi_wwan driver defaults to Ethernet framing. The
++    # RG520N-CN data service negotiated by quectel-CM-M uses raw-IP framing;
++    # leaving the driver at N transmits packets but receives no replies. Set
++    # the framing before quectel-CM-M opens the QMI session so its WDA setup
++    # observes and preserves the same mode.
++    raw_ip_file="/sys/class/net/${qmi_if}/qmi/raw_ip"
++    if [ "$driver" = "qmi" ] && [ -e "$raw_ip_file" ]; then
++        ip link set dev "$qmi_if" down
++        echo Y > "$raw_ip_file"
++        ip link set dev "$qmi_if" up
++        m_debug "set ${qmi_if} raw-IP mode to $(cat "$raw_ip_file")"
++    fi
+     if [ "$bridge_enabled" = "1" ];then
+         cmd_line="${cmd_line} -b"
+     fi

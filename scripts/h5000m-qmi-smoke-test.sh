@@ -107,6 +107,19 @@ fi
 	logread | grep -Ei 'qmodem|quectel|wwan|qmi|udhcpc' | tail -n 200
 } >>"$report"
 
+# Do not return control to the operator while the temporary PDP session is
+# still active. The EXIT trap remains as a second cleanup path.
+cleanup
+sleep 5
+{
+	echo
+	echo "## post-cleanup"
+	/etc/init.d/qmodem_network modem_status "$section" 2>&1 || true
+	pgrep -af 'quectel-CM|modem_dial' || true
+	ip addr show dev "$device" 2>&1 || true
+	echo "raw_ip=$(cat /sys/class/net/$device/qmi/raw_ip 2>/dev/null || echo unavailable)"
+} >>"$report"
+
 if [ "$public_reachable" -eq 1 ]; then
 	echo "QMI data path is reachable. Report: $report"
 	exit 0
