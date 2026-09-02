@@ -52,4 +52,9 @@ sed 's/option enable_dial '\''1'\''/option enable_dial '\''0'\''/' \
 	"$qmodem_config" >"$qmodem_config.tmp"
 mv "$qmodem_config.tmp" "$qmodem_config"
 
+mkdir -p "$target/application/qmodem/files/usr/sbin"
+cp "$repo_root/scripts/h5000m-qmi-smoke-test.sh" \
+	"$target/application/qmodem/files/usr/sbin/h5000m-qmi-smoke-test"
+chmod 0755 "$target/application/qmodem/files/usr/sbin/h5000m-qmi-smoke-test"
+
 echo "staged curated QModem 3.2.0 packages at: $target"

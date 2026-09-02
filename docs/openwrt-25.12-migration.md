@@ -103,6 +103,9 @@ vermagic、模块依赖和哈希；只有与构建基线完全一致时，才可
 - 第五次 RAM 启动确认 QModem 3.2.0 自动识别 `rg520n-cn`、选择 `/dev/ttyUSB2`，并
   注册 `qmodem`、`qmodem_sms`、`modem_ctrl`；全局自动拨号保持关闭。实机日志同时
   暴露 Linux USB root hub 被误排队为 `usb1/usb2`，本地小补丁按 VID `1d6b` 过滤。
+- QMI 验证使用 `h5000m-qmi-smoke-test` 临时启动 `2_1`，强制从 `wwan0` 发出三个
+  ICMP 包，最长运行两分钟并保存报告；正常结束、错误、信号或独立 watchdog 超时都会
+  调用 QModem hang。该脚本不修改全局 `enable_dial=0`，不能替代正式联网配置。
 
 只有实际进入目标内核编译后出现的编译器错误才算源码卡点。缺少交叉链接器、缓存目录
 或 host tool 属于 CI 依赖错误，禁止据此修改内核代码。
