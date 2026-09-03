@@ -2,8 +2,9 @@
 set -u
 
 section=${1:-2_1}
-duration=${QMI_TEST_DURATION:-180}
+duration=${QMI_TEST_DURATION:-240}
 connect_timeout=${QMI_TEST_CONNECT_TIMEOUT:-60}
+ipv4_targets=${QMI_TEST_IPV4_TARGETS:-"1.1.1.1 223.5.5.5 8.8.8.8"}
 report=${QMI_TEST_REPORT:-/tmp/h5000m-qmi-smoke-test.txt}
 watchdog=
 cleaned=0
@@ -40,6 +41,7 @@ device=$(uci -q get "qmodem.$section.network")
 	echo "device=$device"
 	echo "duration=$duration"
 	echo "connect_timeout=$connect_timeout"
+	echo "ipv4_targets=$ipv4_targets"
 	echo "global_enable_dial=$(uci -q get qmodem.main.enable_dial)"
 	echo "device_enable_dial=$(uci -q get qmodem.$section.enable_dial)"
 } >>"$report"
@@ -69,17 +71,21 @@ done
 gateway=$(ip route show dev "$device" 2>/dev/null | awk '$1 == "default" { print $3; exit }')
 public_reachable=0
 public_reachable_after=-1
+public_reachable_target=none
 gateway_reachable=0
 if [ -n "$gateway" ] && ping -c 1 -W 3 -I "$device" "$gateway" >/dev/null 2>&1; then
 	gateway_reachable=1
 fi
 connect_elapsed=0
 while [ "$connect_elapsed" -lt "$connect_timeout" ]; do
-	if ping -c 1 -W 3 -I "$device" 1.1.1.1 >/dev/null 2>&1; then
-		public_reachable=1
-		public_reachable_after=$connect_elapsed
-		break
-	fi
+	for target in $ipv4_targets; do
+		if ping -c 1 -W 1 -I "$device" "$target" >/dev/null 2>&1; then
+			public_reachable=1
+			public_reachable_after=$connect_elapsed
+			public_reachable_target=$target
+			break 2
+		fi
+	done
 	sleep 5
 	connect_elapsed=$((connect_elapsed + 5))
 done
@@ -99,6 +105,7 @@ done
 	echo "gateway_reachable=$gateway_reachable"
 	echo "public_reachable=$public_reachable"
 	echo "public_reachable_after=$public_reachable_after"
+	echo "public_reachable_target=$public_reachable_target"
 	cat "/sys/class/net/$device/statistics/rx_packets" 2>/dev/null | sed 's/^/rx_packets=/' || true
 	cat "/sys/class/net/$device/statistics/tx_packets" 2>/dev/null | sed 's/^/tx_packets=/' || true
 	echo
@@ -110,7 +117,21 @@ done
 	echo
 	echo "## forced-interface ping"
 	[ -z "$gateway" ] || ping -c 3 -W 3 -I "$device" "$gateway" 2>&1 || true
-	ping -c 3 -W 3 -I "$device" 1.1.1.1 2>&1 || true
+	for target in $ipv4_targets; do
+		ping -c 3 -W 3 -I "$device" "$target" 2>&1 || true
+	done
+	ping -6 -c 3 -W 3 -I "$device" 2606:4700:4700::1111 2>&1 || true
+	echo
+	echo "## resolver"
+	cat /etc/resolv.conf 2>&1 || true
+	cat /tmp/resolv.conf.d/resolv.conf.auto 2>&1 || true
+	echo
+	echo "## registration and PDP (no subscriber identifiers)"
+	at_port=$(uci -q get "qmodem.$section.at_port")
+	for command in 'AT+COPS?' 'AT+QNWINFO' 'AT+CGDCONT?' 'AT+CGACT?' 'AT+QENG="servingcell"'; do
+		echo "> $command"
+		tom_modem -d "$at_port" -o a -c "$command" -t 2 2>&1 || true
+	done
 	echo
 	echo "## dial log"
 	tail -n 160 "/var/run/qmodem/${section}_dir/dial_log" 2>&1 || true
@@ -130,6 +151,9 @@ sleep 5
 	pgrep -af 'quectel-CM|modem_dial' || true
 	ip addr show dev "$device" 2>&1 || true
 	echo "raw_ip=$(cat /sys/class/net/$device/qmi/raw_ip 2>/dev/null || echo unavailable)"
+	echo
+	echo "## final dial log after process exit"
+	tail -n 240 "/var/run/qmodem/${section}_dir/dial_log" 2>&1 || true
 } >>"$report"
 
 if [ "$public_reachable" -eq 1 ]; then
