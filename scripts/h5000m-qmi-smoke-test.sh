@@ -2,7 +2,8 @@
 set -u
 
 section=${1:-2_1}
-duration=${QMI_TEST_DURATION:-120}
+duration=${QMI_TEST_DURATION:-180}
+connect_timeout=${QMI_TEST_CONNECT_TIMEOUT:-60}
 report=${QMI_TEST_REPORT:-/tmp/h5000m-qmi-smoke-test.txt}
 watchdog=
 cleaned=0
@@ -38,6 +39,7 @@ device=$(uci -q get "qmodem.$section.network")
 	echo "section=$section"
 	echo "device=$device"
 	echo "duration=$duration"
+	echo "connect_timeout=$connect_timeout"
 	echo "global_enable_dial=$(uci -q get qmodem.main.enable_dial)"
 	echo "device_enable_dial=$(uci -q get qmodem.$section.enable_dial)"
 } >>"$report"
@@ -61,17 +63,26 @@ while [ "$elapsed" -lt 90 ]; do
 	elapsed=$((elapsed + 5))
 done
 
-# The address may appear just before raw-IP mode, routes and carrier settle.
-sleep 5
+# The address can appear before the cellular bearer forwards user traffic.
+# Poll instead of sampling once so a normal attach delay is not reported as a
+# data-path failure.
 gateway=$(ip route show dev "$device" 2>/dev/null | awk '$1 == "default" { print $3; exit }')
 public_reachable=0
+public_reachable_after=-1
 gateway_reachable=0
 if [ -n "$gateway" ] && ping -c 1 -W 3 -I "$device" "$gateway" >/dev/null 2>&1; then
 	gateway_reachable=1
 fi
-if ping -c 3 -W 3 -I "$device" 1.1.1.1 >/dev/null 2>&1; then
-	public_reachable=1
-fi
+connect_elapsed=0
+while [ "$connect_elapsed" -lt "$connect_timeout" ]; do
+	if ping -c 1 -W 3 -I "$device" 1.1.1.1 >/dev/null 2>&1; then
+		public_reachable=1
+		public_reachable_after=$connect_elapsed
+		break
+	fi
+	sleep 5
+	connect_elapsed=$((connect_elapsed + 5))
+done
 
 {
 	echo
@@ -87,6 +98,7 @@ fi
 	echo "gateway=$gateway"
 	echo "gateway_reachable=$gateway_reachable"
 	echo "public_reachable=$public_reachable"
+	echo "public_reachable_after=$public_reachable_after"
 	cat "/sys/class/net/$device/statistics/rx_packets" 2>/dev/null | sed 's/^/rx_packets=/' || true
 	cat "/sys/class/net/$device/statistics/tx_packets" 2>/dev/null | sed 's/^/tx_packets=/' || true
 	echo
